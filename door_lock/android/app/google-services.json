@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "305119911187",
+    "firebase_url": "https://door-lock-a6658-default-rtdb.firebaseio.com",
     "project_id": "door-lock-a6658",
     "storage_bucket": "door-lock-a6658.appspot.com"
   },
@@ -29,6 +30,13 @@
             {
               "client_id": "305119911187-jcejnhrrnevmq08q2ag5u56m9p4sr2pv.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "305119911187-rr6thnh5pjrdpb4coom5gr8h1jh8o1tp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.doorLock"
+              }
             }
           ]
         }
