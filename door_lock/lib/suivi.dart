@@ -9,22 +9,21 @@ class suivi extends StatefulWidget {
 
 class suivid extends State<suivi> {
   bool statut = false;
-  dynamic user;
+  List users = [];
   bool isLoading = false;
 
   DatabaseReference ref = FirebaseDatabase.instance.ref();
 
   Future<void> getFirebase() async {
-    final snapshot = await ref.child('users').get();
-    if (snapshot.exists) {
-      print(snapshot.value);
-      user = snapshot.value;
-      setState(() {
-        isLoading = true;
-      });
-    } else {
-      print('No data available.');
-    }
+    final snapshot = await ref.child('users').get().then((value) => {
+          value.children.forEach((element) {
+            print(element.value.toString());
+            users.add(element.value);
+          })
+        });
+    setState(() {
+      isLoading = true;
+    });
   }
 
   @override
@@ -61,26 +60,29 @@ class suivid extends State<suivi> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Container(
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.door_sliding_rounded,
-                    size: 80,
-                  ),
-                  isLoading
-                      ? Text(
-                          "${user["name"]} opened the door",
-                          style: const TextStyle(fontSize: 18),
-                        )
-                      : const Text(
-                          "no one opened the door",
-                          style: TextStyle(fontSize: 18),
-                        )
-                ],
-              ),
-            ),
-          )
+            child: SizedBox(
+                height: MediaQuery.of(context).size.height / 2,
+                child: isLoading
+                    ? ListView.builder(
+                        itemCount: users.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Row(children: [
+                            const Icon(
+                              Icons.door_front_door,
+                              size: 35,
+                            ),
+                            Text(users[index]["name"] +
+                                " opened the door " +
+                                "at " +
+                                users[index]["time"])
+                          ]);
+                        },
+                      )
+                    : const Text(
+                        "no one opened the door",
+                        style: TextStyle(fontSize: 18),
+                      )),
+          ),
         ],
       )),
       floatingActionButton: FloatingActionButton(

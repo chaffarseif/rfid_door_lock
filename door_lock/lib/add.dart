@@ -16,6 +16,30 @@ class addc extends State<add> {
   var uid = const Uuid();
   DatabaseReference ref = FirebaseDatabase.instance.ref();
   bool isLoading = false;
+  dynamic user;
+  @override
+  void initState() {
+    super.initState();
+    getFirebase();
+  }
+
+  Future<void> getFirebase() async {
+    final snapshot = await ref.child('add').child('1').get();
+    if (snapshot.exists) {
+      print(snapshot.value);
+      user = snapshot.value;
+      rfidcontroller.text = user["RFID"].toString();
+
+      timecontroller.text = user["time"].toString();
+
+      setState(() {
+        isLoading = true;
+      });
+    } else {
+      print('No data available.');
+    }
+  }
+
   ajouter() {
     if (namecontroller.text.isNotEmpty &&
         rfidcontroller.text.isNotEmpty &&

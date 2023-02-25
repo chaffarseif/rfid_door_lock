@@ -23,8 +23,8 @@ Future<void> main() async {
     routes: {
       "login": (context) => const login(),
       "suivi": (context) => const suivi(),
-      "add": (context) => add()
+      "add": (context) => const add()
     },
-    home: const login(),
+    home: const suivi(),
   ));
 }
