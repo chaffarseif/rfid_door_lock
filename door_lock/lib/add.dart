@@ -49,6 +49,7 @@ class addc extends State<add> {
         "rfid": rfidcontroller.text,
         "time": timecontroller.text
       });
+      ref.child("statut").set(false);
       Navigator.pushNamed(context, "suivi");
       showDialog(
           context: context,

@@ -26,6 +26,8 @@ class suivid extends State<suivi> {
     });
   }
 
+  changeStatus() async {}
+
   @override
   void initState() {
     super.initState();
@@ -86,7 +88,9 @@ class suivid extends State<suivi> {
         ],
       )),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
+          await ref.child("statut").set(true);
+          print(statut);
           Navigator.pushNamed(context, "add");
         },
         backgroundColor: Colors.black,

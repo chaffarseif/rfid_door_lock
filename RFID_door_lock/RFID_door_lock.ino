@@ -4,6 +4,37 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
+
+
+/// wifi 
+
+// Insert your network credentials
+#define WIFI_SSID "abdou"
+#define WIFI_PASSWORD "abdouSuper"
+//firebase 
+#include <Firebase_ESP_Client.h>
+
+//Provide the token generation process info.
+#include "addons/TokenHelper.h"
+//Provide the RTDB payload printing info and other helper functions.
+#include "addons/RTDBHelper.h"
+
+// Insert Firebase project API Key
+#define API_KEY "AIzaSyAT4ZcS0N1QmeJvIwgr7E0hDGJWAArfcJw"
+
+// Insert RTDB URLefine the RTDB URL */
+#define DATABASE_URL "https://door-lock-a6658-default-rtdb.firebaseio.com" 
+
+//Define Firebase Data object
+FirebaseData fbdo;
+
+FirebaseAuth auth;
+FirebaseConfig config;
+
+ 
+bool signupOK = false;
+/// end firebase  ************************************************************
+
 #define SS_PIN 21
 #define RST_PIN 22
 #define Buzzer 4
@@ -13,10 +44,50 @@ byte nuidPICC[4];
 bool flag=false;
 bool flag1=false;
  bool statut=false;
+
+
+
+ void initWiFi() {
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to WiFi ..");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
+    delay(1000);
+  }
+  Serial.println(WiFi.localIP());
+  Serial.println();
+}
 void setup() 
 {
   Serial.begin(115200);
+  initWiFi();
+  // firebase ////////////////////////////////////
+  
+  /* Assign the api key (required) */
+  config.api_key = API_KEY;
+
+  /* Assign the RTDB URL (required) */
+  config.database_url = DATABASE_URL;
+
+  /* Sign up */
+  if (Firebase.signUp(&config, &auth, "", "")){
+    Serial.println("ok");
+    signupOK = true;
+  }
+  else{
+    Serial.printf("%s\n", config.signer.signupError.message.c_str());
+  }
+
+  /* Assign the callback function for the long running token generation task */
+  config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
+  
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
+/// end firebase *****************************
+  
   SPI.begin();      // Initiate  SPI bus
+  
+  
   rfid.PCD_Init(); // Init MFRC522 
   pinMode(Buzzer,OUTPUT);
     for (byte i = 0; i < 6; i++) {
@@ -28,17 +99,87 @@ void setup()
   printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
   Serial.println("Approximate your Card to the Reader....");
 }
+
+
+void readStatusFromFirebase(){
+   if (Firebase.RTDB.getBool(&fbdo, "/statut/value")) {
+       bool b = fbdo.to<bool>();
+       Serial.println("tnekna");
+         Serial.println(b);
+    }
+    else {
+      Serial.println(fbdo.errorReason());
+    }
+}
+
+void insertIntoFirebase(){
+
+  if (Firebase.ready() && signupOK ){
+    
+    // Write an Int number on the database path test/int
+    if (Firebase.RTDB.setBool(&fbdo, "statut/value", true)){
+      Serial.println("PASSED");
+      Serial.println("PATH: " + fbdo.dataPath());
+      Serial.println("TYPE: " + fbdo.dataType());
+      readStatusFromFirebase(); 
+      }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+  }
+}
+
+
+
+
+/**
+ * Helper routine to dump a byte array as hex values to Serial. 
+ */
+void printHex(byte *buffer, byte bufferSize) {
+  for (byte i = 0; i < bufferSize; i++) {
+    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+    Serial.print(buffer[i], HEX);
+  }
+}
+
+/**
+ * Helper routine to dump a byte array as dec values to Serial.
+ */
+void printDec(byte *buffer, byte bufferSize) {
+  for (byte i = 0; i < bufferSize; i++) {
+    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+    Serial.print(buffer[i], DEC);
+  }
+}
+
+
 void loop() 
 {
+
+ if (Serial.available()) { // if there is data comming
+    String command = Serial.readStringUntil('\n'); // read string until newline character
+
+    if (command == "insert") {
+        insertIntoFirebase(); 
+    } else if (command == "read") {
+    readStatusFromFirebase();
+     }
+  }
+ /*
   delay(500);
-if(statut==true){
+if(statut==false){
   rfid1();
+  insertIntoFirebase();
 }else{
   readcard();
 }
 
-  
+  */
 } 
+
+
+
 
 void rfid1()
 {
@@ -142,25 +283,4 @@ delay(500);
 
   // Stop encryption on PCD
   rfid.PCD_StopCrypto1();
-}
-
-
-/**
- * Helper routine to dump a byte array as hex values to Serial. 
- */
-void printHex(byte *buffer, byte bufferSize) {
-  for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    Serial.print(buffer[i], HEX);
-  }
-}
-
-/**
- * Helper routine to dump a byte array as dec values to Serial.
- */
-void printDec(byte *buffer, byte bufferSize) {
-  for (byte i = 0; i < bufferSize; i++) {
-    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
-    Serial.print(buffer[i], DEC);
-  }
 }
