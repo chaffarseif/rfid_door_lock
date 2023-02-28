@@ -44,7 +44,7 @@ class addc extends State<add> {
     if (namecontroller.text.isNotEmpty &&
         rfidcontroller.text.isNotEmpty &&
         timecontroller.text.isNotEmpty) {
-      ref.child("users").child(uid.v4().toString()).set({
+      ref.child("users").child(rfidcontroller.text).set({
         "name": namecontroller.text,
         "rfid": rfidcontroller.text,
         "time": timecontroller.text
